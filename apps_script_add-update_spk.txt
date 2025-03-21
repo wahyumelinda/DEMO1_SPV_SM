@@ -1,0 +1,345 @@
+function getAllData() {
+  try {
+    var ss = SpreadsheetApp.openById("1z5o3P6nxcYMRz23EYUnjkLJUAKpOIkpe7-YI11mt4Ps");
+    var sheet = ss.getSheetByName("ALL");
+
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Sheet ALL tidak ditemukan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var data = sheet.getDataRange().getDisplayValues(); // Ambil semua data
+    var formattedData = [];
+
+    if (data.length < 3) {  // Minimal harus ada header (2 baris) + 1 data
+      return ContentService.createTextOutput(JSON.stringify({ error: "Tidak ada data yang ditampilkan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Ambil 2 baris pertama sebagai header
+    var headers1 = data[0];  // Baris pertama header
+    var headers2 = data[1];  // Baris kedua header
+    var headers = [];
+
+    // Pemetaan header lama ke nama yang baru
+    var headerMapping = {
+      "Tanggal Pengerjaan": "Tanggal",
+      "Pengerjaan Mulai": "Mulai",
+      "Tindakan Perbaikan": "Tindakan",
+      "Pemakaian Sparepart Deskripsi": "Deskripsi",
+      "Nomor Mesin": "Nomor" // Tambahan kolom Nomor Mesin
+    };
+
+    for (var i = 0; i < headers1.length; i++) {
+      var header = headers1[i] + (headers2[i] ? " " + headers2[i] : "");  // Gabungkan header
+      header = header.trim();  // Bersihkan spasi ekstra
+      headers.push(headerMapping[header] || header); // Ganti header jika ada di mapping
+    }
+
+    // Mulai dari baris ke-2 karena baris 0-1 adalah header
+    for (var i = 2; i < data.length; i++) {
+      var rowObject = {};
+      for (var j = 0; j < headers.length; j++) {
+        rowObject[headers[j]] = data[i][j]; // Buat objek JSON sesuai header baru
+      }
+      formattedData.push(rowObject);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(formattedData))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "error": error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+
+function doGet(e) {
+  try {
+    var action = e.parameter.action;
+    var ss = SpreadsheetApp.openById("1z5o3P6nxcYMRz23EYUnjkLJUAKpOIkpe7-YI11mt4Ps");
+    var sheet = ss.getSheetByName("SPK");
+
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Sheet ALL not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action == "get_options") {
+      return getOptions(ss);
+    } else if (action == "get_data") {
+      return getData(sheet);
+    } else if (action == "get_all_data") {
+      return getAllData();
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Invalid action" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "error": error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doPost(e) {
+  try {
+    var params = JSON.parse(e.postData.contents);
+    var action = params.action;
+    var ss = SpreadsheetApp.openById("1z5o3P6nxcYMRz23EYUnjkLJUAKpOIkpe7-YI11mt4Ps");
+    var sheet = ss.getSheetByName("SPK");
+
+    if (!sheet) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Sheet ALL not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action == "add_data") {
+      return addData(sheet, params);
+    } else if (action == "update_data") {  // Tambahkan aksi update
+      return updateData(sheet, params);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Invalid action" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "error": error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function getData(sheet) {
+  try {
+    var ss = sheet.getParent();
+    var sheetAll = ss.getSheetByName("ALL");
+
+    if (!sheetAll) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Sheet ALL tidak ditemukan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // Ambil semua ID dari sheet ALL
+    var allData = sheetAll.getRange(2, 1, sheetAll.getLastRow() - 1, 1).getValues().flat();
+    
+    var data = sheet.getDataRange().getDisplayValues(); // ambil data sesuai tampilan di GSheets
+    var formattedData = [];
+
+    if (data.length < 2) {
+      return ContentService.createTextOutput(JSON.stringify({ error: "Tidak ada data yang ditampilkan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var timeZone = Session.getScriptTimeZone();
+
+    for (var i = 1; i < data.length; i++) {
+      var row = data[i].slice();
+      var id = parseInt(row[0]); // Ambil ID dari kolom pertama
+
+      if (!allData.includes(id)) { // Hanya tambahkan jika ID belum ada di sheet ALL
+        if (row[6]) { 
+          var dateValue = new Date(row[6]);
+          if (!isNaN(dateValue.getTime())) {
+            row[6] = Utilities.formatDate(dateValue, timeZone, "dd-MMM-yy");
+          }
+        }
+        formattedData.push(row);
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(formattedData)).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "error": error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Ambil opsi untuk select box dari sheet lain
+function getOptions(ss) {
+  try {
+    var sheets = ["BU", "Line", "Produk", "Mesin", "Masalah", "PIC"];
+    var options = {};
+
+    sheets.forEach(name => {
+      var sheet = ss.getSheetByName(name);
+      if (sheet) {
+        var values = sheet.getDataRange().getValues(); // Ambil semua data yang ada
+        values = values.filter(row => row.some(cell => cell !== "")); // Hapus baris kosong
+        options[name] = values;
+      }
+    });
+
+    return ContentService.createTextOutput(JSON.stringify(options)).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "error": error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Konversi jam ke zona waktu Jakarta
+function convertToJakartaTime(timeString) {
+  var timeParts = timeString.split(":");
+  var date = new Date();
+  date.setHours(timeParts[0]);
+  date.setMinutes(timeParts[1]);
+  date.setSeconds(0);
+
+  return Utilities.formatDate(date, "GMT+7", "HH:mm");
+}
+
+function addData(sheet, params) {
+  try {
+    if (!params.Tanggal) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Invalid Data" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var ss = sheet.getParent();
+    var sheetPIC = ss.getSheetByName("PIC_ID");
+
+    if (!sheetPIC) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Sheet PIC_ID tidak ditemukan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var lastRow = sheet.getLastRow();
+    var newID = 1;
+
+    if (lastRow > 1) { 
+      var lastID = sheet.getRange(lastRow, 1).getValue();
+      if (!isNaN(lastID) && lastID !== "") {
+        newID = lastID + 1; 
+      }
+    } else { 
+      newID = 1; // Jika hanya header, mulai ID dari 1
+    }
+
+    var tanggal = new Date(params.Tanggal);
+    var formattedTanggal = Utilities.formatDate(tanggal, "GMT+7", "dd-MMM-yy");
+
+    var now = new Date();
+    var formattedTimestamp = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd HH:mm:ss");
+
+    // Tambahkan data ke sheet SPK
+    sheet.appendRow([
+      newID, params.BU, params.Line, params.Produk, params.Nomor, params.Mesin,
+      params.Masalah, params.Tindakan, formattedTanggal, params.PIC, formattedTimestamp
+    ]);
+
+    // Jika ada lebih dari satu PIC, pisahkan dengan koma lalu tambahkan ke PIC_ID
+    if (params.PIC) {
+      var picList = params.PIC.split(",").map(pic => pic.trim()); // Pisahkan berdasarkan koma dan hapus spasi ekstra
+
+      picList.forEach(pic => {
+        sheetPIC.appendRow([newID, pic]); // Tambahkan ke sheet PIC_ID
+      });
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ "status": "success", "new_id": newID }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "error": error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function updateData(sheet, params) {
+  try {
+    if (!params.ID) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "ID tidak ditemukan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var ss = sheet.getParent();
+    var sheetAll = ss.getSheetByName("ALL");
+    var sheetPIC = ss.getSheetByName("PIC_ID");
+
+    if (!sheetAll || !sheetPIC) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Sheet ALL atau PIC_ID tidak ditemukan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var allData = sheetAll.getRange(2, 1, sheetAll.getLastRow() - 1, 1).getValues().flat();
+    var targetID = parseInt(params.ID, 10);
+    var allIDs = allData.map(id => parseInt(id, 10));
+
+    if (allIDs.includes(targetID)) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Data tidak dapat diperbarui karena ID sudah ada di sheet ALL" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var data = sheet.getDataRange().getValues();
+    var headers = data[0];
+    var idIndex = headers.indexOf("ID");
+
+    if (idIndex === -1) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Kolom ID tidak ditemukan" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var rowIndex = -1;
+    for (var i = 1; i < data.length; i++) {
+      if (parseInt(data[i][idIndex], 10) === targetID) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      return ContentService.createTextOutput(JSON.stringify({ "error": "Data tidak ditemukan di SPK" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var tanggal = new Date(params.Tanggal);
+    var formattedTanggal = Utilities.formatDate(tanggal, "GMT+7", "dd-MMM-yy");
+    var now = new Date();
+    var formattedTimestamp = Utilities.formatDate(now, "GMT+7", "yyyy-MM-dd HH:mm:ss");
+
+    var updates = {
+      "BU": params.BU,
+      "Line": params.Line,
+      "Produk": params.Produk,
+      "Nomor Mesin":params.Nomor,
+      "Mesin": params.Mesin,
+      "Masalah": params.Masalah,
+      "Tindakan Perbaikan": params.Tindakan,
+      "Tanggal Pengerjaan": formattedTanggal,
+      "PIC": params.PIC,
+      "Last Update": formattedTimestamp
+    };
+
+    for (var key in updates) {
+      var colIndex = headers.indexOf(key);
+      if (colIndex !== -1) {
+        sheet.getRange(rowIndex, colIndex + 1).setValue(updates[key]);
+      }
+    }
+
+    // 🔹 **Hapus Semua Entri Lama di PIC_ID untuk ID Ini**
+    var picData = sheetPIC.getDataRange().getValues();
+    var picIDIndex = 0;
+    var rowsToDelete = [];
+
+    for (var j = picData.length - 1; j > 0; j--) {
+      if (parseInt(picData[j][picIDIndex], 10) === targetID) {
+        rowsToDelete.push(j + 1);
+      }
+    }
+
+    rowsToDelete.forEach(row => sheetPIC.deleteRow(row));
+
+    // 🔹 **Tambahkan PIC Baru ke PIC_ID**
+    if (params.PIC) {
+      var picList = params.PIC.split(",").map(pic => pic.trim());
+
+      picList.forEach(pic => {
+        sheetPIC.appendRow([targetID, pic]);
+      });
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ "status": "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ "error": error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
