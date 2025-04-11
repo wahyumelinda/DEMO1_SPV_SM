@@ -16,7 +16,7 @@ def run():
     )
 
     # apps script
-    APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz53Wl4Rkl6Z0QmUQh_Fo8r-TvRA4Gp8GcqrvLGSgK7ETAEIicdzW-IR5HEZuJdrTQ/exec"
+    APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8xKTrFGJtqhhkLWOBj4jyMrJQ-id9zWXOouUVoz1mF91IF5uPUuPw2fIm4gxoXDzf/exec"
 
     def get_all_data():
         try:
@@ -70,6 +70,7 @@ def run():
         "form_mesin": "",
         "form_masalah": "",
         "form_tindakan": "",
+        "form_keterangan": "",
         "form_pic": "",
         "form_date": datetime.today().date(),
     }
@@ -113,6 +114,8 @@ def run():
     masalah = st.selectbox("Masalah", masalah_options, key="form_masalah")
 
     tindakan = st.text_area("Tindakan Perbaikan", value=st.session_state.get("form_tindakan"))
+    
+    keterangan = st.text_area("Keterangan", value=st.session_state.get("form_keterangan"))
 
     tanggal = st.date_input("Tanggal Pengerjaan", value=st.session_state.get("form_date"))
 
@@ -133,10 +136,11 @@ def run():
             "BU": bu,
             "Line": line,
             "Produk": produk,
-            "Nomor": nomor_mesin,
             "Mesin": mesin,
+            "Nomor": nomor_mesin,
             "Masalah": masalah,
             "Tindakan": tindakan.strip(),
+            "Keterangan" : keterangan.strip(),
             "Tanggal": tanggal.strftime("%Y-%m-%d"),
             "PIC": ", ".join(pic) if pic else ""
         }
