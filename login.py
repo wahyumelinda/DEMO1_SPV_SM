@@ -105,8 +105,8 @@ if option == "Data Preventive":
 elif option == "Data SPK":
     response = requests.get(f"{API_URL}?action=get_data")
     expected_columns = [
-        "ID", "BU", "Line", "Produk", "Nomor Mesin", "Mesin",
-        "Masalah", "Tindakan Perbaikan", "Tanggal Pengerjaan", "PIC", "Last Update"
+        "ID", "BU", "Line", "Produk", "Mesin", "Nomor Mesin",
+        "Masalah", "Tindakan Perbaikan", "Tanggal Pengerjaan", "PIC", "Keterangan", "Last Update"
     ]
 
 # Cek apakah API berhasil mendapatkan data
