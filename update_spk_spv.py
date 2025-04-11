@@ -13,7 +13,7 @@ def run():
         unsafe_allow_html=True
     )
 
-    APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP8kd-8d5qDtyVMg6kaugaJDuBA3yFF27K-q_pGVksINlLRvCpfnWXeUXIzVdQL8fg/exec"
+    APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8xKTrFGJtqhhkLWOBj4jyMrJQ-id9zWXOouUVoz1mF91IF5uPUuPw2fIm4gxoXDzf/exec"
 
     def get_all_data():
         try:
@@ -47,7 +47,7 @@ def run():
     all_ids = get_all_ids()
 
     if isinstance(data, list) and len(data) > 0:
-        df = pd.DataFrame(data, columns=["ID", "BU", "Line", "Produk", "Nomor Mesin", "Mesin", "Masalah", "Tindakan", "Tanggal", "PIC", "Last Update"])
+        df = pd.DataFrame(data, columns=["ID", "BU", "Line", "Produk", "Mesin", "Nomor Mesin", "Masalah", "Tindakan", "Tanggal", "PIC", "Keterangan", "Last Update"])
         df["Tanggal"] = pd.to_datetime(df["Tanggal"]).dt.date  
 
         # Hapus data yang ID-nya ada di all_ids
@@ -77,6 +77,8 @@ def run():
             masalah = st.selectbox("Masalah", masalah_options, index=masalah_options.index(selected_data["Masalah"]) if selected_data["Masalah"] in masalah_options else 0)
             
             tindakan = st.text_area("Tindakan Perbaikan", value=selected_data["Tindakan"])
+            
+            keterangan = st.text_area("Keterangan", value=selected_data["Keterangan"])
 
             tanggal = st.date_input("Tanggal Pengerjaan", value=pd.to_datetime(selected_data["Tanggal"], format="%d-%b-%y").date())
             
@@ -99,12 +101,13 @@ def run():
                         "BU": bu,
                         "Line": line,
                         "Produk": produk,
-                        "Nomor": nomor,
                         "Mesin": mesin,
+                        "Nomor": nomor,
                         "Masalah": masalah,
                         "Tindakan": tindakan,
                         "Tanggal": tanggal.strftime("%d-%b-%y"),
-                        "PIC": ", ".join(pic) if pic else ""
+                        "PIC": ", ".join(pic) if pic else "",
+                        "Keterangan": keterangan
                     }
                     st.dataframe(pd.DataFrame([updated_data]))
 
@@ -118,10 +121,11 @@ def run():
                     "BU": bu,
                     "Line": line,                    
                     "Produk": produk,
-                    "Nomor": nomor,
                     "Mesin": mesin,
+                    "Nomor": nomor,
                     "Masalah": masalah,
                     "Tindakan": tindakan,
+                    "Keterangan": keterangan,
                     "Tanggal": tanggal.strftime("%d-%b-%y"),
                     "PIC": ", ".join(pic) if pic else ""
                 }
