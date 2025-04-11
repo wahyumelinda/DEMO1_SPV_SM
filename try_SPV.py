@@ -13,7 +13,7 @@ def run():
         unsafe_allow_html=True
     )
     # URL apps script
-    API_URL = "https://script.google.com/macros/s/AKfycbzr96YkQ_yT1Rld_I3Dw_q64FLKkawP9uTvennnlgJ0T8tYFuK6hiqgOBRj9y5XuZgI/exec"
+    API_URL = "https://script.google.com/macros/s/AKfycbyTXVsGwHNxhXcShbVUdrlZU-8b6RvbMKJGzDiGDtf7m5GdmPqy8u8vwdQEQOay0klW/exec"
 
     # Ambil semua data 
     def get_all_data():
@@ -37,7 +37,7 @@ def run():
     if all_data:
         # Konversi ke DataFrame
         df = pd.DataFrame(all_data, columns=[
-            "ID", "BU", "Line", "Produk", "Nomor Mesin", "Mesin", "Tanggal Pengerjaan",
+            "ID", "BU", "Line", "Produk", "Mesin", "Nomor Mesin", "Tanggal Pengerjaan",
             "Mulai", "Selesai", "Masalah", "Tindakan Perbaikan", "Deskripsi",
             "Quantity", "PIC", "Kondisi", "Alasan", "SPV", "Last Update SPV", 
             "Approve", "Reason", "SM", "Last Update SM"
