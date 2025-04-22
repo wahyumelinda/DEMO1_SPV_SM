@@ -40,7 +40,7 @@ def run():
             "ID", "BU", "Line", "Produk", "Mesin", "Nomor Mesin","Tanggal Pengerjaan",
             "Mulai", "Selesai", "Masalah", "Tindakan Perbaikan", "Deskripsi",
             "Quantity", "PIC", "Kondisi", "Alasan", "SPV", "Last Update SPV", 
-            "Approve", "Reason", "SM", "Last Update SM"
+            "Approve", "Reason", "SM", "Last Update SM", "Durasi"
         ])
 
         # Pastikan kolom yang digunakan benar
