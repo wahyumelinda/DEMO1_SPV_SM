@@ -28,31 +28,6 @@ def hash_password(password):
     salt_b64 = base64.b64encode(salt).decode('utf-8')
     return hashed_password, salt_b64
 
-
-# Register user dengan validasi
-def register_user(username, password, role):
-    try:
-        conn = get_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
-            existing_user = cursor.fetchone()
-
-            if existing_user:
-                if existing_user['role'] == role:
-                    st.warning("⚠️ Username sudah digunakan. Silakan pilih username lain.")
-                else:
-                    st.warning("⚠️ Username sudah terdaftar dengan role berbeda.")
-                return
-
-            hashed_password, salt = hash_password(password)
-            cursor.execute("INSERT INTO users (username, password, role, salt) VALUES (%s, %s, %s, %s)",
-                           (username, hashed_password, role, salt))
-        conn.commit()
-        conn.close()
-        st.success("✅ Registrasi berhasil! Silakan login.")
-    except Exception as e:
-        st.error(f"❌ Error registering user: {e}")
-
 # Login user
 def login_user(username, password):
     try:
@@ -111,30 +86,19 @@ with st.sidebar:
     st.title("🔐 Login System")
 
     if not st.session_state.logged_in:
-        menu = st.selectbox("Pilih Menu", ["Login", "Register"])
-
-        if menu == "Register":
-            st.subheader("📝 Buat Akun Baru")
-            username = st.text_input("👤 Username")
-            password = st.text_input("🔒 Password", type="password")
-            role = st.selectbox("🎭 Pilih Role", ["Supervisor", "Section Manager"])
-            if st.button("✅ Register"):
-                register_user(username, password, role)
-
-        elif menu == "Login":
-            st.subheader("🔑 Login")
-            username = st.text_input("👤 Username")
-            password = st.text_input("🔒 Password", type="password")
-            if st.button("🔓 Login"):
-                user = login_user(username, password)
-                if user:
-                    st.session_state.logged_in = True
-                    st.session_state.role = user['role']
-                    st.session_state.username = user['username']
-                    st.success(f"✅ Selamat datang, {user['username']} sebagai {user['role']}!")
-                    st.rerun()
-                else:
-                    st.error("❌ Username atau password salah!")
+        st.subheader("🔑 Login")
+        username = st.text_input("👤 Username")
+        password = st.text_input("🔒 Password", type="password")
+        if st.button("🔓 Login"):
+            user = login_user(username, password)
+            if user:
+                st.session_state.logged_in = True
+                st.session_state.role = user['role']
+                st.session_state.username = user['username']
+                st.success(f"✅ Selamat datang, {user['username']} sebagai {user['role']}!")
+                st.rerun()
+            else:
+                st.error("❌ Username atau password salah!")
 
     else:
         st.success(f"✅ Anda masuk sebagai **{st.session_state.role}**")
