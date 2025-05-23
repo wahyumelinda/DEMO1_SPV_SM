@@ -166,7 +166,7 @@ if st.session_state.logged_in:
     st.sidebar.subheader("📂 Pilih Halaman")
 
     if st.session_state.role == "Supervisor":
-        page = st.sidebar.selectbox("📌 Pilih Halaman:", ["Tambah SPK", "Update SPK", "Approval Preventive Form"], index=0)
+        page = st.sidebar.selectbox("📌 Pilih Halaman:", ["Tambah SPK", "Update SPK", "Approval Preventive Form", "Unduh SPK"], index=0)
 
         if page == "Tambah SPK":
             import add_spk_spv
@@ -177,6 +177,9 @@ if st.session_state.logged_in:
         elif page == "Approval Preventive Form":
             import try_SPV
             try_SPV.run()
+        elif page == "Unduh SPK":
+            import SPK_by_BU
+            SPK_by_BU.run()
             
     elif st.session_state.role == "Section Manager":
         import try_SM
