@@ -58,16 +58,16 @@ def run():
 
                 # HEADER
                 pdf.set_font("Arial", "B", 14)
-                pdf.cell(0, 10, "PT. ULTRA PRIMA ABADI", ln=True)
+                pdf.cell(0, 10, "PT. ULTRA PRIMA ABADI", ln=True, align="C")
+
+                pdf.set_font("Arial", "B", 13)
+                pdf.cell(0, 10, "SURAT PERINTAH KERJA", ln=True, align="C")
+                pdf.ln(3)
 
                 tgl_awal_str = tanggal_awal.strftime('%d-%b-%y')
                 tgl_akhir_str = tanggal_akhir.strftime('%d-%b-%y')
                 pdf.set_font("Arial", "", 12)
                 pdf.cell(0, 8, f"BU: {current_bu} | Periode: {tgl_awal_str} s.d. {tgl_akhir_str}", ln=True)
-
-                pdf.ln(5)
-                pdf.set_font("Arial", "B", 13)
-                pdf.cell(0, 10, "SURAT PERINTAH KERJA", ln=True, align="C")
                 pdf.ln(3)
 
                 # Header tabel
